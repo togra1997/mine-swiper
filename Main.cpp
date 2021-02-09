@@ -22,6 +22,7 @@ int field_status[25]{
 
 };
 
+
 //周りの爆弾の数の表示
 int status[25]{
 	0,0,0,0,0,
@@ -48,16 +49,16 @@ void draw(int bomb,int field,int safe) {
 
 			//爆弾引いたら爆弾のやつを出す
 			if (main_field[i] == 1) {
-				DrawGraph(32 * x, 32 * y, bomb, TRUE); // データハンドルを使って画像を描画
+				DrawGraph(32 + 32 * x, 32 + 32 * y, bomb, TRUE); // データハンドルを使って画像を描画
 			}
 
 
-			else DrawGraph(32 * x, 32 * y, safe, TRUE); // データハンドルを使って画像を描画
+			else DrawGraph(32 + 32 * x, 32 + 32 * y, safe, TRUE); // データハンドルを使って画像を描画
 
 		}
-			
 
-		else DrawGraph( 32 * x,32 * y, field, TRUE); // データハンドルを使って画像を描画
+
+		else DrawGraph(32 + 32 * x, 32 + 32 * y, field, TRUE); // データハンドルを使って画像を描画
 
 
 	}
@@ -65,15 +66,7 @@ void draw(int bomb,int field,int safe) {
 
 }
 
-//入力情報から取っていく
-void check() {
 
-
-
-
-
-
-}
 
 
 void text_mouse(int x,int y) {
@@ -87,9 +80,53 @@ void text_mouse(int x,int y) {
 }
 
 
+//周りの爆弾の数を表示する
+void debug_text(int text,int x,int y) {
 
 
+	int Green = GetColor(0, 255, 0);      // 緑の色コードを取得
 
+	//DrawFormatString(100, 150, Green, "%d", x); // 文字を描画する
+
+	DrawFormatString(40 + 32 * x, 40 + 32 * y, Green, "%d", text, TRUE); // データハンドルを使って画像を描画
+
+}
+
+//入力情報から取っていく
+//入力した箇所の周りの爆弾の数を表示
+void check(int x,int y) {
+
+	int a = y * 5 + x;
+
+	status[a] = main_field[a + 1] + main_field[a - 1] + main_field[a + 5] + main_field[a - 5];
+	
+	
+	
+	
+	
+	for (int i = 0; i < 25; ++i) {
+
+		if (field_status[i] == 1) {
+
+			if (status[i] != 0) {
+
+				int yy = i / 5;
+				int xx = i % 5;
+
+
+				debug_text(status[i], xx, yy);
+
+
+			}
+
+		}
+
+
+	}
+
+	
+
+}
 
 
 
@@ -127,28 +164,30 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			break;//ウィンドウの×ボタンが押されたらループを抜ける
 		}
 		ClearDrawScreen(); // 画面を消す
-		draw(bomb, field,safe);
+		draw(bomb, field, safe);
 
 		int Mouse;
 		Mouse = GetMouseInput();                //マウスの入力状態取得
-		
+
 
 		GetMousePoint(&mouse_x, &mouse_y);
-		text_mouse(mouse_x, mouse_y);
+		int x = -1 + mouse_x / 32;
+		int y = -1 + mouse_y / 32;
 		//マウス入力途中
 		if (Mouse & MOUSE_INPUT_LEFT) {
 
 
-			
-			int x = mouse_x / 32;
-			int y = mouse_y / 32;
+			if (field_status[y * 5 + x] != 1) {
+				if ((x <= 4) && (0 <= x) && (y <= 4) && (0 <= y))
+					field_status[y * 5 + x] = 1;
+			}
 
-			field_status[y * 5 + x] = 1;
+			text_mouse(x, y);
 
 		}
 
+		check(x, y);
 
-		
 
 		ScreenFlip(); //裏画面を表画面に反映
 
