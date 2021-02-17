@@ -6,14 +6,13 @@
 #define pix  32
 
 
-int main_field[field_number+1]{
+int main_field[field_number + 1]{
 	0,0,0,0,0,0,
 	0,1,0,0,1,0,
 	1,0,1,0,0,0,
 	0,0,0,0,0,0,
 	0,0,0,0,1,0,
 	0,0,0,0,1,0,0
-
 };
 
 //開けているかどうかの判定
@@ -24,7 +23,6 @@ int field_status[field_number + 1]{
 	0,0,0,0,0,0,
 	0,0,0,0,0,0,
 	0,0,0,0,0,0,0
-
 };
 
 
@@ -36,17 +34,44 @@ int status[field_number + 1]{
 	0,0,0,0,0,0,
 	0,0,0,0,0,0,
 	0,0,0,0,0,0,0
+};
+
+
+//旗立てる処理のやつ
+int flag_status[field_number + 1]{
+	0,0,0,0,0,0,
+	0,0,0,0,0,0,
+	0,0,0,0,0,0,
+	0,0,0,0,0,0,
+	0,0,0,0,0,0,
+	0,0,0,0,0,0,0
 
 };
+
+
+
 
 //フィールドのルートとったもの（1次元の配列を二次元に変換するために）
 int feald_sqart = 6;
 
+//マウスが押されたら１押されていなければ0
+int muse_input_status = 0;
+
+//ゲームが続けられるかの判定　生きている　０　死んでいる　１ クリア２
+int game_status = 0;
+
+//爆弾の数の定
+int bakudan = 6;
+
+
 
 //表示用のやつ
-void draw(int bomb, int field, int safe) {
+void draw(int bomb, int field, int safe,int flag) {
 
 	int x = 0, y = 0;
+
+	int a = 0;
+
 	for (int i = 0; i < field_number; ++i) {
 
 		y = i / feald_sqart;
@@ -59,18 +84,40 @@ void draw(int bomb, int field, int safe) {
 
 			//爆弾引いたら爆弾の画像を出す
 			if (main_field[i] == 1) {
-				DrawGraph(delx + pix * x, delx + pix * y, bomb, TRUE); // データハンドルを使って画像を描画
+				DrawGraph(delx + pix * x, delx + pix * y, bomb, TRUE); // 爆弾の画像描画
+				game_status = 1;
 			}
 
-			else DrawGraph(delx + pix * x, delx + pix * y, safe, TRUE); // データハンドルを使って画像を描画
+			else DrawGraph(delx + pix * x, delx + pix * y, safe, TRUE); // 赤いタイルの表示
+
+			//開けたフィールドの数を数える。
+			a += 1;
+
+
+			if (a == (field_number - bakudan)) {
+				//ゲームクリアの判定
+				game_status = 2;
+			}
+
 
 		}
 
 		else {
+
 			field_status[i] = 0;
-			DrawGraph(delx + pix * x, delx + pix * y, field, TRUE); // データハンドルを使って画像を描画
-		
+			DrawGraph(delx + pix * x, delx + pix * y, field, TRUE); // 白いタイルの表示	
+
+
+			if (flag_status[i] == 1) {
+
+				DrawGraph(delx + pix * x, delx + pix * y, flag, TRUE); // 爆弾の画像描画
+
+			}
+
 		}
+
+
+
 
 		int Green = GetColor(0, 255, 0);      // 緑の色コードを取得
 
@@ -102,6 +149,25 @@ void debug_text(int text, int x, int y) {
 }
 
 
+void game_over() {
+
+	int Green = GetColor(0, 255, 0);      // 緑の色コードを取得
+
+	DrawFormatString(300,100, Green, "game over", TRUE); // データハンドルを使って画像を描画
+
+}
+
+
+void game_clear() {
+
+	int Green = GetColor(0, 255, 0);      // 緑の色コードを取得
+
+	DrawFormatString(300, 100, Green, "game clear", TRUE); // データハンドルを使って画像を描画
+
+
+}
+
+
 //入力情報から取っていく
 //入力した箇所の周りの爆弾の数を表示
 void check(int x, int y) {
@@ -117,7 +183,6 @@ void check(int x, int y) {
 	b[1] = a - feald_sqart;
 	b[2] = a + 1;
 	b[3] = a + feald_sqart;
-
 
 
 	for (int i = 0; i < 4; ++i) {
@@ -141,8 +206,6 @@ void check(int x, int y) {
 
 	}
 
-
-
 	status[a] = main_field[b[0]] + main_field[b[1]] + main_field[b[2]] + main_field[b[3]];
 
 
@@ -164,6 +227,59 @@ void bomb_number() {
 			}
 }
 
+//マウス押されて土岐の処理
+void muse_input_left() {
+
+	int mouse_x = 0;
+	int mouse_y = 0;
+
+
+	GetMousePoint(&mouse_x, &mouse_y);
+	int x = -1 + mouse_x / pix;
+	int y = -1 + mouse_y / pix;
+	if (field_status[y * feald_sqart + x] != 1) {
+		if ((x <= feald_sqart - 1) && (0 <= x) && (y <= feald_sqart - 1) && (0 <= y)) {
+
+			field_status[y * feald_sqart + x] = 1;
+
+			check(x, y);
+
+		}
+	}
+}
+
+
+//マウス押されて土岐の処理
+void muse_input_rigtt() {
+
+	int mouse_x = 0;
+	int mouse_y = 0;
+
+
+	GetMousePoint(&mouse_x, &mouse_y);
+	int x = -1 + mouse_x / pix;
+	int y = -1 + mouse_y / pix;
+
+
+	//二回押したら消えるようにする
+	if (flag_status[y * feald_sqart + x] == 1) {
+		if ((x <= feald_sqart - 1) && (0 <= x) && (y <= feald_sqart - 1) && (0 <= y)) {
+
+			flag_status[y * feald_sqart + x] = 0;
+
+		}
+
+
+	}
+
+	if (field_status[y * feald_sqart + x] != 1) {
+		if ((x <= feald_sqart - 1) && (0 <= x) && (y <= feald_sqart - 1) && (0 <= y)) {
+
+			flag_status[y * feald_sqart + x] = 1;
+
+		}
+	}
+}
 
 
 // プログラムは WinMain から始まります
@@ -184,45 +300,78 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int safe;
 	safe = LoadGraph("pictures/safe.png");
 
-	int mouse_x = 0;
-	int mouse_y = 0;
+	int flag;
+	flag = LoadGraph("pictures/flag.jpg");
+
 
 
 
 	while (1) {
+
 		if (ProcessMessage() != 0) { // メッセージ処理
 			break;//ウィンドウの×ボタンが押されたらループを抜ける
 		}
-		ClearDrawScreen(); // 画面を消す
-		draw(bomb, field, safe);
-
-		int Mouse;
-		Mouse = GetMouseInput();                //マウスの入力状態取得
 
 
+		if (game_status == 0) {
+			ClearDrawScreen(); // 画面を消す
+			draw(bomb, field, safe, flag);
+
+			int Mouse;
+			Mouse = GetMouseInput();                //マウスの入力状態取得
 
 
-		//マウス入力途中
-		if (Mouse & MOUSE_INPUT_LEFT) {
-			GetMousePoint(&mouse_x, &mouse_y);
-			int x = -1 + mouse_x / 32;
-			int y = -1 + mouse_y / 32;
-			if (field_status[y * feald_sqart + x] != 1) {
-				if ((x <= feald_sqart - 1) && (0 <= x) && (y <= feald_sqart - 1) && (0 <= y)) {
+			//左のマウス入力
+			if (Mouse & MOUSE_INPUT_LEFT) {
 
-					field_status[y * feald_sqart + x] = 1;
-
-					check(x, y);
-
+				if (muse_input_status == 0)
+				{
+					muse_input_left();
 				}
+				//マウスが押されたらステータスの変更
+				if (muse_input_status == 0)
+				{
+					muse_input_status = 1;
+				}
+
 			}
-			
-			
-			//text_mouse(x, y);
+			else
+			{
+				muse_input_status = 0;
+			}
+
+
+			//右のマウス入力
+			if (Mouse & MOUSE_INPUT_RIGHT) {
+
+				if (muse_input_status == 0)
+				{
+					muse_input_rigtt();
+				}
+				//マウスが押されたらステータスの変更
+				if (muse_input_status == 0)
+				{
+					muse_input_status = 1;
+				}
+
+			}
+
+			else
+			{
+				muse_input_status = 0;
+			}
+
+
+			bomb_number();
+
 
 		}
 
-		bomb_number();
+
+		else if (game_status == 1) game_over();
+
+		else if (game_status == 2) game_clear();
+
 
 		ScreenFlip(); //裏画面を表画面に反映
 
