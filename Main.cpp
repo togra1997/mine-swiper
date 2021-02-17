@@ -6,36 +6,36 @@
 #define pix  32
 
 
-int main_field[field_number]{
+int main_field[field_number+1]{
 	0,0,0,0,0,0,
 	0,1,0,0,1,0,
 	1,0,1,0,0,0,
 	0,0,0,0,0,0,
 	0,0,0,0,1,0,
-	0,0,0,0,1,0
+	0,0,0,0,1,0,0
 
 };
 
-
-int field_status[field_number]{
+//開けているかどうかの判定
+int field_status[field_number + 1]{
 	0,0,0,0,0,0,
 	0,0,0,0,0,0,
 	0,0,0,0,0,0,
 	0,0,0,0,0,0,
 	0,0,0,0,0,0,
-	0,0,0,0,0,0,
+	0,0,0,0,0,0,0
 
 };
 
 
 //周りの爆弾の数の表示
-int status[field_number]{
+int status[field_number + 1]{
 	0,0,0,0,0,0,
 	0,0,0,0,0,0,
 	0,0,0,0,0,0,
 	0,0,0,0,0,0,
 	0,0,0,0,0,0,
-	0,0,0,0,0,0,
+	0,0,0,0,0,0,0
 
 };
 
@@ -104,13 +104,13 @@ void debug_text(int text, int x, int y) {
 
 //入力情報から取っていく
 //入力した箇所の周りの爆弾の数を表示
-void check(int x,int y) {
+void check(int x, int y) {
 
 
 	int a = y * feald_sqart + x;
 
 	//各点の位置のやつ。
-	int b [4];
+	int b[4];
 
 	//0:左 1:上　2:右　3:下
 	b[0] = a - 1;
@@ -123,13 +123,13 @@ void check(int x,int y) {
 	for (int i = 0; i < 4; ++i) {
 
 		//上下二オーバーフローした時のもの
-		if ((b[i] < 0) || (b[i] >= field_number)) {
+		if ((b[i] < 0) || (b[i] > field_number)) {
 			b[i] = 0;
 
 		}
 
 		//左端の時用
-		if (((a % feald_sqart) == 0) ) {
+		if (((a % feald_sqart) == 0)) {
 			b[0] = 0;
 
 		}
@@ -144,31 +144,25 @@ void check(int x,int y) {
 
 
 	status[a] = main_field[b[0]] + main_field[b[1]] + main_field[b[2]] + main_field[b[3]];
-	
-	//選んだパネルの周りの数字を表示
-	for (int i = 0; i < field_number; ++i) {
 
+
+}
+
+
+void bomb_number() {
+	//選んだパネルの周りの数字を表示
+	for (int i = 0; i < field_number; ++i)
 		//パネルが空いているかつ、爆弾ではない場合
-		if ((field_status[i] == 1)&&(main_field[i]!=1)) {
-			
+		if ((field_status[i] == 1) && (main_field[i] != 1))
 			if (status[i] != 0) {
 
 				int yy = i / feald_sqart;
 				int xx = i % feald_sqart;
 
-
 				debug_text(status[i], xx, yy);
 
-
 			}
-
-		}
-
-	}
-
 }
-
-
 
 
 
@@ -206,23 +200,29 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		Mouse = GetMouseInput();                //マウスの入力状態取得
 
 
-		GetMousePoint(&mouse_x, &mouse_y);
-		int x = -1 + mouse_x / 32;
-		int y = -1 + mouse_y / 32;
+
 
 		//マウス入力途中
 		if (Mouse & MOUSE_INPUT_LEFT) {
-
+			GetMousePoint(&mouse_x, &mouse_y);
+			int x = -1 + mouse_x / 32;
+			int y = -1 + mouse_y / 32;
 			if (field_status[y * feald_sqart + x] != 1) {
-				if ((x <= feald_sqart - 1) && (0 <= x) && (y <= feald_sqart - 1) && (0 <= y))
-					field_status[y * feald_sqart + x] = 1;
-			}
+				if ((x <= feald_sqart - 1) && (0 <= x) && (y <= feald_sqart - 1) && (0 <= y)) {
 
-			text_mouse(x, y);
+					field_status[y * feald_sqart + x] = 1;
+
+					check(x, y);
+
+				}
+			}
+			
+			
+			//text_mouse(x, y);
 
 		}
 
-		check(x, y);
+		bomb_number();
 
 		ScreenFlip(); //裏画面を表画面に反映
 
@@ -233,7 +233,3 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	return 0;				// ソフトの終了 
 }
-
-
-
-
